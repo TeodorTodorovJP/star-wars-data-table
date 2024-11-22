@@ -5,7 +5,7 @@ import { Paper } from "@mui/material"
 import DetailPair from "./DetailPair"
 import { memo } from "react"
 
-const DetailsTable = (props: { details: Details }) => {
+const DetailsBox = (props: { details: Details }) => {
   const { details } = props
 
   return (
@@ -22,4 +22,4 @@ const DetailsTable = (props: { details: Details }) => {
   )
 }
 
-export default memo(DetailsTable)
+export default memo(DetailsBox)

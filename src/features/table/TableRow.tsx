@@ -2,7 +2,7 @@ import Collapse from "@mui/material/Collapse"
 import IconButton from "@mui/material/IconButton"
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown"
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp"
-import DetailsTable from "./DetailsTable"
+import DetailsBox from "./DetailsBox"
 import { Person } from "./peopleApiSlice"
 import { memo, useState } from "react"
 import { StyledTableCell, StyledTableRow } from "../../theme"
@@ -30,7 +30,7 @@ const Row = (props: { row: Person }) => {
       <StyledTableRow>
         <StyledTableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
           <Collapse in={open} timeout="auto" unmountOnExit>
-            <DetailsTable details={row.details} />
+            <DetailsBox details={row.details} />
           </Collapse>
         </StyledTableCell>
       </StyledTableRow>

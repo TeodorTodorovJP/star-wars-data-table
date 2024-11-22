@@ -4,24 +4,23 @@ import FormLabel from "@mui/material/FormLabel"
 import FormControl from "@mui/material/FormControl"
 import TextField from "@mui/material/TextField"
 import Typography from "@mui/material/Typography"
-import { FormEvent, useEffect, useRef, useState } from "react"
+import { FormEvent, useEffect, useState } from "react"
 import { useAppDispatch, useAppSelector } from "../../app/hooks"
-import { isUserSigned, logIn } from "./signUpSlice"
+import { isUserSigned, logIn, userStatus } from "./signUpSlice"
 import { useNavigate } from "react-router-dom"
 import { Card, LogInContainer } from "../../theme"
+import { validateName, validatePassword } from "./validations"
 
 /**
  * The component works with the more classic state management approach, using createAppSlice
  */
 export default function SignUp() {
   // Password section
-  const passwordInputRef = useRef<HTMLInputElement>(null)
-  const [passwordError, setPasswordError] = useState(false)
+  const [password, setPassword] = useState("")
   const [passwordErrorMessage, setPasswordErrorMessage] = useState("")
 
   // Name section
-  const nameInputRef = useRef<HTMLInputElement>(null)
-  const [nameError, setNameError] = useState(false)
+  const [name, setName] = useState("")
   const [nameErrorMessage, setNameErrorMessage] = useState("")
 
   const dispatch = useAppDispatch()
@@ -29,6 +28,7 @@ export default function SignUp() {
   const navigate = useNavigate()
 
   const signed = useAppSelector(isUserSigned)
+  const status = useAppSelector(userStatus)
 
   useEffect(() => {
     if (signed) {
@@ -36,50 +36,29 @@ export default function SignUp() {
     }
   }, [signed, navigate])
 
-  const validateInputs = () => {
-    const name = nameInputRef.current?.value
-    const password = passwordInputRef.current?.value
+  const validateInputName = (name: string) => {
+    const nameIsValid = validateName(name)
+    setName(name)
+    setNameErrorMessage(nameIsValid)
+  }
 
-    let isValid = true
-
-    if (!password || password.length < 6) {
-      setPasswordError(true)
-      setPasswordErrorMessage("Password must be at least 6 characters long.")
-      isValid = false
-    } else {
-      setPasswordError(false)
-      setPasswordErrorMessage("")
-    }
-
-    if (!name || name.length < 1) {
-      setNameError(true)
-      setNameErrorMessage("Name is required.")
-      isValid = false
-    } else {
-      setNameError(false)
-      setNameErrorMessage("")
-    }
-
-    return isValid
+  const validateInputPassword = (password: string) => {
+    const passwordIsValid = validatePassword(password)
+    setPassword(password)
+    setPasswordErrorMessage(passwordIsValid)
   }
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    if (nameError || passwordError) return
-
-    const data = new FormData(event.currentTarget)
-    const name = data.get("name") as string
-    const password = data.get("password") as string
+    if (nameErrorMessage || passwordErrorMessage) return
 
     if (name && password) {
       dispatch(logIn({ name, password }))
-    } else {
-      console.error("Error during login")
     }
 
     console.log({
-      name: data.get("name"),
-      password: data.get("password"),
+      name: name,
+      password: password,
     })
   }
 
@@ -100,11 +79,11 @@ export default function SignUp() {
                 fullWidth
                 id="name"
                 placeholder="Yoda"
-                error={nameError}
+                error={!!nameErrorMessage}
                 helperText={nameErrorMessage}
-                color={nameError ? "error" : "primary"}
-                onChange={validateInputs}
-                inputRef={nameInputRef}
+                color={nameErrorMessage ? "error" : "primary"}
+                onChange={(event) => validateInputName(event.currentTarget.value)}
+                value={name}
               />
             </FormControl>
 
@@ -119,15 +98,15 @@ export default function SignUp() {
                 id="password"
                 autoComplete="new-password"
                 variant="outlined"
-                error={passwordError}
+                error={!!passwordErrorMessage}
                 helperText={passwordErrorMessage}
-                color={passwordError ? "error" : "primary"}
-                onChange={validateInputs}
-                inputRef={passwordInputRef}
+                color={passwordErrorMessage ? "error" : "primary"}
+                onChange={(event) => validateInputPassword(event.currentTarget.value)}
+                value={password}
               />
             </FormControl>
-            <Button type="submit" fullWidth variant="contained" onClick={validateInputs} disabled={!nameInputRef.current?.value || !passwordInputRef.current?.value}>
-              Log In
+            <Button type="submit" fullWidth variant="contained" disabled={!name || !password || !!nameErrorMessage || !!passwordErrorMessage || status === "loading"}>
+              {status === "idle" ? "Log In" : status === "loading" ? "Loading" : "Failed"}
             </Button>
           </Box>
         </Card>

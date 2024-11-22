@@ -1,5 +1,6 @@
 import { createAppSlice } from "../../app/createAppSlice"
-import { confirmLogIn } from "./logInAPI"
+import { loadUserFromStorage } from "./localStorage"
+import { confirmLogIn, confirmLogOut } from "./logInAPI"
 
 export interface UserData {
   name: string
@@ -12,9 +13,11 @@ export interface SignUpSliceState {
   status: "idle" | "loading" | "failed"
 }
 
+const user = loadUserFromStorage()
+
 const initialState: SignUpSliceState = {
-  signed: false,
-  userData: null,
+  signed: !!user,
+  userData: user,
   status: "idle",
 }
 
@@ -22,11 +25,27 @@ export const signUpSlice = createAppSlice({
   name: "signUp",
   initialState,
   reducers: (create) => ({
-    logout: create.reducer((state) => {
-      state.status = "idle"
-      state.userData = null
-      state.signed = false
-    }),
+    logout: create.asyncThunk(
+      async () => {
+        const response = await confirmLogOut()
+        return response
+      },
+      {
+        pending: (state) => {
+          state.status = "loading"
+        },
+        fulfilled: (state) => {
+          state.status = "idle"
+          state.userData = null
+          state.signed = false
+        },
+        rejected: (state) => {
+          state.status = "failed"
+          state.userData = null
+          state.signed = false
+        },
+      }
+    ),
 
     logIn: create.asyncThunk(
       async (userData: UserData) => {
@@ -52,9 +71,10 @@ export const signUpSlice = createAppSlice({
   }),
   selectors: {
     isUserSigned: (state) => state.signed,
+    userStatus: (state) => state.status,
   },
 })
 
 export const { logIn, logout } = signUpSlice.actions
 
-export const { isUserSigned } = signUpSlice.selectors
+export const { isUserSigned, userStatus } = signUpSlice.selectors
